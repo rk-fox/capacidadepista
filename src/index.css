@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+@theme {
+  --font-data-mono: "JetBrains Mono", monospace;
+  --font-label-caps: "JetBrains Mono", monospace;
+  --font-body-md: "Roboto Flex", sans-serif;
+
+  --color-surface: var(--surface);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  
+  --color-secondary: var(--secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+
+  --color-error: var(--error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+
+  --color-functional-dep: var(--functional-dep);
+  --color-functional-arr: var(--functional-arr);
+  --color-functional-hold: var(--functional-hold);
+}
+
+@layer base {
+  :root {
+    /* Light Mode - High Contrast Industrial */
+    --surface: #f8fafc; /* Slate 50 */
+    --surface-bright: #ffffff;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #f1f5f9; /* Slate 100 */
+    --surface-container: #e2e8f0; /* Slate 200 */
+    --surface-container-high: #cbd5e1; /* Slate 300 */
+    --surface-container-highest: #94a3b8; /* Slate 400 */
+    
+    --on-surface: #0f172a; /* Slate 900 */
+    --on-surface-variant: #334155; /* Slate 700 */
+    
+    --outline: #64748b; /* Slate 500 */
+    --outline-variant: #cbd5e1; /* Slate 300 */
+    
+    --primary: #0f172a; /* Slate 900 */
+    --on-primary: #ffffff;
+    
+    --secondary: #334155; /* Slate 700 */
+    --secondary-container: #e2e8f0; /* Slate 200 */
+    --on-secondary-container: #0f172a; /* Slate 900 */
+
+    --error: #dc2626; /* Red 600 */
+    --error-container: #fef2f2; /* Red 50 */
+    --on-error-container: #991b1b; /* Red 800 */
+
+    --functional-dep: #ea580c; /* Orange 600 */
+    --functional-arr: #16a34a; /* Green 600 */
+    --functional-hold: #ca8a04; /* Yellow 600 */
+  }
+
+  .dark {
+    /* Dark Mode - Technical Brutalism */
+    --surface: #081425;
+    --surface-bright: #2f3a4c;
+    --surface-container-lowest: #040e1f;
+    --surface-container-low: #111c2d;
+    --surface-container: #152031;
+    --surface-container-high: #1f2a3c;
+    --surface-container-highest: #2a3548;
+    
+    --on-surface: #d8e3fb;
+    --on-surface-variant: #8e9194; /* slightly lighter than original outline for readability */
+    
+    --outline: #8e9194;
+    --outline-variant: #44474a;
+    
+    --primary: #ffffff;
+    --on-primary: #2c3134;
+    
+    --secondary: #b9c7e0;
+    --secondary-container: #3c4a5e;
+    --on-secondary-container: #abb9d2;
+
+    --error: #ffb4ab;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+
+    --functional-dep: #f59e0b; /* Orange 500 */
+    --functional-arr: #22c55e; /* Green 500 */
+    --functional-hold: #eab308; /* Yellow 500 */
+  }
+
+  body {
+    @apply bg-surface text-on-surface font-body-md antialiased overflow-hidden select-none transition-colors duration-200;
+  }
+
+  /* Scrollbar hiding for density */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  @keyframes pulse-red {
+    0%, 100% { background-color: rgba(220, 38, 38, 0.8); }
+    50% { background-color: transparent; }
+  }
+  .blink-alert {
+    animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}

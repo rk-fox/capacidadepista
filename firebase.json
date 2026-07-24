@@ -1,0 +1,8 @@
+{
+  "firestore": {
+    "databaseId": "ai-studio-sistemadecoletas-c38bf226-bff9-40eb-8901-303f0299f8ae",
+    "rules": "firestore.rules",
+    "edition": "ENTERPRISE",
+    "dataAccessMode": "FIRESTORE_NATIVE"
+  }
+}

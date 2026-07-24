@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+  </defs>
+  <!-- Top button -->
+  <rect x="27" y="2" width="10" height="8" rx="2" fill="#60a5fa"/>
+  <!-- Side button -->
+  <line x1="50" y1="16" x2="56" y2="10" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+  <!-- Watch body -->
+  <circle cx="32" cy="36" r="24" fill="none" stroke="url(#g)" stroke-width="4"/>
+  <!-- Inner circle -->
+  <circle cx="32" cy="36" r="20" fill="#1e293b" opacity="0.3"/>
+  <!-- Minute hand -->
+  <line x1="32" y1="36" x2="32" y2="20" stroke="#f8fafc" stroke-width="3" stroke-linecap="round"/>
+  <!-- Second hand -->
+  <line x1="32" y1="36" x2="44" y2="30" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+  <!-- Center dot -->
+  <circle cx="32" cy="36" r="2.5" fill="#f8fafc"/>
+</svg>
