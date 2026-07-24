@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Download, Moon, Sun, Plus, X, LogOut, SlidersHorizontal, Layers, Edit2, Plane, FileSpreadsheet, Users, Lock as LockIcon } from 'lucide-react';
+import { Settings, Download, Moon, Sun, Plus, X, LogOut, SlidersHorizontal, Layers, Edit2, Plane, FileSpreadsheet, Users, Lock as LockIcon, Maximize, Minimize } from 'lucide-react';
 import { FlightStrip } from './FlightStrip';
 import { ExportModal } from './ExportModal';
 import { UserManagementModal } from './UserManagementModal';
@@ -27,6 +27,28 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
   const [flights, setFlights] = useState<Flight[]>([]);
   const [showMoveModal, setShowMoveModal] = useState<string | null>(null);
   const [activeAsideModal, setActiveAsideModal] = useState<'AD' | 'RWY' | 'TWY' | 'FAF' | null>(null);
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const [ad, setAd] = useState<string>('SBGR');
 
@@ -203,7 +225,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
         
         {/* Center: Clock */}
         <div className="flex items-center justify-center w-1/3">
-           <span className="font-data-mono font-bold text-primary text-[20px] sm:text-[24px] tracking-wider">{time}</span>
+           <span className="font-data-mono font-bold text-primary text-[18px] sm:text-[24px] tracking-wider whitespace-nowrap">{time}</span>
         </div>
 
         {/* Right Section */}
@@ -218,6 +240,14 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
+
+          <button 
+            onClick={toggleFullscreen} 
+            className="p-1.5 text-on-surface-variant hover:text-primary hover:bg-surface-container-high rounded-lg transition-colors cursor-pointer"
+            title="Tela Cheia"
+          >
+            {isFullscreen ? <Minimize size={20} /> : <Maximize size={20} />}
+          </button>
 
           {/* Settings Gear Button (Always available, main portal on Mobile) */}
           <button 
@@ -368,7 +398,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                  className="w-full max-w-[220px] bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-4 rounded shadow-[0_2px_10px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 transition-all active:scale-95"
                >
                  <Plus size={16} strokeWidth={3} /> 
-                 <span className="font-label-caps text-[12px] uppercase tracking-wider">New Strip</span>
+                 <span className="font-label-caps text-[12px] uppercase tracking-wider">Nova Strip</span>
                </button>
             </div>
             
@@ -459,7 +489,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-[11px] font-label-caps flex items-center gap-1 shadow"
                >
                  <Plus size={14} strokeWidth={3} />
-                 <span>ADICIONAR</span>
+                 <span>STRIP</span>
                </button>
             </div>
 

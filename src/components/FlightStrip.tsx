@@ -211,29 +211,29 @@ export function FlightStrip({
             <div></div>
           </div>
         ) : isDep ? (
-          <div className="flex flex-row justify-between items-center min-h-[32px] gap-1 px-1">
+          <div className="flex flex-row justify-between items-center min-h-[44px] gap-1 px-1">
             <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-0.5 transition-colors whitespace-nowrap text-center flex-1"
+              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
               onClick={(e) => { e.stopPropagation(); handleUpdate({ ingressoTime: Date.now(), reacaoTime: undefined, corridaTime: undefined }); }}
             >
-              <span className="text-[9px] text-on-surface-variant mb-0.5">INGRESSO</span>
-              <span className="text-primary font-bold">{flight.ingressoTime ? formatHHMMSS(flight.ingressoTime) : '--:--:--'}</span>
+              <span className="text-[10px] text-on-surface-variant mb-0.5">INGRESSO</span>
+              <span className="text-primary font-bold text-[12px]">{flight.ingressoTime ? formatHHMMSS(flight.ingressoTime) : '--:--:--'}</span>
             </div>
             
             <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-0.5 transition-colors whitespace-nowrap text-center flex-1"
+              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
               onClick={(e) => { e.stopPropagation(); if (flight.ingressoTime) handleUpdate({ reacaoTime: Date.now(), corridaTime: undefined }); }}
             >
-              <span className="text-[9px] text-on-surface-variant mb-0.5">REAÇÃO</span>
-              <span className="text-primary font-bold">{flight.reacaoTime ? formatDiff(flight.ingressoTime, flight.reacaoTime) : '---s'}</span>
+              <span className="text-[10px] text-on-surface-variant mb-0.5">REAÇÃO</span>
+              <span className="text-primary font-bold text-[12px]">{flight.reacaoTime ? formatDiff(flight.ingressoTime, flight.reacaoTime) : '---s'}</span>
             </div>
 
             <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-0.5 transition-colors whitespace-nowrap text-center flex-1"
+              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
               onClick={(e) => { e.stopPropagation(); if (flight.ingressoTime) handleUpdate({ corridaTime: Date.now() }); }}
             >
-              <span className="text-[9px] text-on-surface-variant mb-0.5">CORRIDA</span>
-              <span className="text-primary font-bold">{flight.corridaTime ? formatDiff(flight.reacaoTime || flight.ingressoTime, flight.corridaTime) : '---s'}</span>
+              <span className="text-[10px] text-on-surface-variant mb-0.5">CORRIDA</span>
+              <span className="text-primary font-bold text-[12px]">{flight.corridaTime ? formatDiff(flight.reacaoTime || flight.ingressoTime, flight.corridaTime) : '---s'}</span>
             </div>
             
             <button 
@@ -244,14 +244,14 @@ export function FlightStrip({
                 else if (!flight.corridaTime) handleUpdate({ corridaTime: Date.now() });
                 else if (!flight.finished) handleUpdate('finished', true);
               }}
-              className="p-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-colors flex-shrink-0 shadow-sm ml-1"
+              className="p-2 sm:p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-colors flex-shrink-0 shadow-sm ml-1"
               title="Stopwatch"
             >
-              <Clock size={14} />
+              <Clock size={18} />
             </button>
           </div>
         ) : isArr ? (
-          <div className="flex flex-row justify-between items-center min-h-[32px] gap-0.5 overflow-x-auto scrollbar-hide px-0.5">
+          <div className="flex flex-row justify-between items-center min-h-[44px] gap-0.5 overflow-x-auto scrollbar-hide px-0.5">
             {arrCheckpoints.map((cp, idx) => {
                // Find previous time for diff calculation
                let prevTime: number | undefined;
@@ -274,7 +274,7 @@ export function FlightStrip({
                return (
                  <div 
                    key={cp.key}
-                   className={`flex flex-col rounded px-1 py-0.5 transition-colors whitespace-nowrap text-center flex-1 ${
+                   className={`flex flex-col rounded px-1 py-1.5 transition-colors whitespace-nowrap text-center flex-1 ${
                      isPLivreDisabled 
                        ? 'opacity-40 cursor-not-allowed' 
                        : 'cursor-pointer hover:bg-surface-container-high'
@@ -292,8 +292,8 @@ export function FlightStrip({
                      handleUpdate(updates);
                    }}
                  >
-                   <span className="text-[8.5px] text-on-surface-variant mb-0.5">{cp.label}</span>
-                   <span className="text-primary font-bold text-[9.5px]">{displayValue}</span>
+                   <span className="text-[9px] text-on-surface-variant mb-0.5">{cp.label}</span>
+                   <span className="text-primary font-bold text-[11px]">{displayValue}</span>
                  </div>
                );
             })}
@@ -320,10 +320,10 @@ export function FlightStrip({
                   handleUpdate('finished', true);
                 }
               }}
-              className="p-1.5 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-colors flex-shrink-0 shadow-sm ml-1"
+              className="p-2 sm:p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-colors flex-shrink-0 shadow-sm ml-1"
               title="Stopwatch"
             >
-              <Clock size={14} />
+              <Clock size={18} />
             </button>
           </div>
         ) : null}
