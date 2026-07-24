@@ -19,6 +19,11 @@ function formatHHMMSS(ms?: number) {
   return `${h}:${m}:${s}`;
 }
 
+function getDiffSecs(start?: number, end?: number) {
+  if (!start || !end) return '';
+  return Math.floor((end - start) / 1000).toString();
+}
+
 export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, onClearFlights }: ExportModalProps) {
   const [filterMode, setFilterMode] = useState<'FINISHED' | 'ALL'>('FINISHED');
   const [opFilter, setOpFilter] = useState<'ALL' | 'DEP' | 'ARR'>('ALL');
@@ -49,8 +54,6 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
     return true;
   });
 
-  // Table row generator matching requested columns:
-  // Indicativo, tipo, esteira, AD, RWY, táxi, operação, ingresso, corrida, faf2, faf1, faf, thr, p_livre, obs
   const getRowData = (f: Flight) => {
     const isDep = f.type === 'DEP';
     const isArr = f.type === 'ARR';
@@ -61,18 +64,34 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
       ? (f.taxiwayOut || f.taxiway || '') 
       : (f.taxiway || '');
 
-    const ingresso = isDep && f.ingressoTime ? formatHHMMSS(f.ingressoTime) : '';
-    const corrida = isDep && f.corridaTime ? formatHHMMSS(f.corridaTime) : '';
+    const ingresso = isDep ? getDiffSecs(f.inicioTime, f.ingressoTime) : '';
+    const prevToCorrida = f.reacaoTime || f.autorizacaoTime || f.ingressoTime || f.inicioTime;
+    const corrida = isDep ? getDiffSecs(prevToCorrida, f.corridaTime) : '';
 
-    const faf2 = isArr && f.faf2Time ? formatHHMMSS(f.faf2Time) : '';
-    const faf1 = isArr && f.faf1Time ? formatHHMMSS(f.faf1Time) : '';
-    const faf = isArr && f.fafTime ? formatHHMMSS(f.fafTime) : '';
-    const thr = isArr && f.thrTime ? formatHHMMSS(f.thrTime) : '';
-    const pLivre = isArr && f.pLivreTime ? formatHHMMSS(f.pLivreTime) : '';
+    let topd = '';
+    if (isDep && f.ingressoTime && f.corridaTime) {
+      const ingressoSecs = f.inicioTime ? Math.floor((f.ingressoTime - f.inicioTime) / 1000) : 0;
+      const corridaSecs = prevToCorrida ? Math.floor((f.corridaTime - prevToCorrida) / 1000) : 0;
+      topd = (ingressoSecs + corridaSecs).toString();
+    }
+
+    const faf2 = isArr ? getDiffSecs(f.faf2Time, f.thrTime) : '';
+    const faf1 = isArr ? getDiffSecs(f.faf1Time, f.thrTime) : '';
+    const faf = isArr ? getDiffSecs(f.fafTime, f.thrTime) : '';
+    const topp = isArr ? getDiffSecs(f.thrTime, f.pLivreTime) : '';
 
     let obs = '';
-    if (isDep && f.reacaoTime) {
-      obs = `Reação: ${formatHHMMSS(f.reacaoTime)}`;
+    if (isDep) {
+      const parts = [];
+      if (f.autorizacaoTime) {
+        const prevToAut = f.ingressoTime || f.inicioTime;
+        parts.push(`Aut: ${getDiffSecs(prevToAut, f.autorizacaoTime)}s`);
+      }
+      if (f.reacaoTime) {
+        const prevToReacao = f.autorizacaoTime || f.ingressoTime || f.inicioTime;
+        parts.push(`Reação: ${getDiffSecs(prevToReacao, f.reacaoTime)}s`);
+      }
+      obs = parts.join(' | ');
     }
 
     return {
@@ -85,11 +104,11 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
       operacao: f.type || '',
       ingresso,
       corrida,
+      topd,
       faf2,
       faf1,
       faf,
-      thr,
-      pLivre,
+      topp,
       obs
     };
   };
@@ -98,7 +117,7 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
   const handleExportCSV = () => {
     const headers = [
       'Indicativo', 'Tipo', 'Esteira', 'AD', 'RWY', 'Táxi', 'Operação',
-      'Ingresso', 'Corrida', 'FAF2', 'FAF1', 'FAF', 'THR', 'P_LIVRE', 'OBS'
+      'Ingresso', 'Corrida', 'TOPD', 'FAF2', 'FAF1', 'FAF', 'TOPP', 'OBS'
     ];
 
     const rows = displayedFlights.map(f => {
@@ -113,11 +132,11 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
         d.operacao,
         d.ingresso,
         d.corrida,
+        d.topd,
         d.faf2,
         d.faf1,
         d.faf,
-        d.thr,
-        d.pLivre,
+        d.topp,
         `"${d.obs.replace(/"/g, '""')}"`
       ];
     });
@@ -141,14 +160,14 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
   const handleCopyClipboard = () => {
     const headers = [
       'Indicativo', 'Tipo', 'Esteira', 'AD', 'RWY', 'Táxi', 'Operação',
-      'Ingresso', 'Corrida', 'FAF2', 'FAF1', 'FAF', 'THR', 'P_LIVRE', 'OBS'
+      'Ingresso', 'Corrida', 'TOPD', 'FAF2', 'FAF1', 'FAF', 'TOPP', 'OBS'
     ];
 
     const rows = displayedFlights.map(f => {
       const d = getRowData(f);
       return [
         d.indicativo, d.tipo, d.esteira, d.ad, d.rwy, d.taxi, d.operacao,
-        d.ingresso, d.corrida, d.faf2, d.faf1, d.faf, d.thr, d.pLivre, d.obs
+        d.ingresso, d.corrida, d.topd, d.faf2, d.faf1, d.faf, d.topp, d.obs
       ].join("\t");
     });
 
@@ -319,7 +338,7 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
           ) : (
             <div className="min-w-[1150px] border-b border-outline-variant">
               {/* Table Header */}
-              <div className="sticky top-0 z-10 bg-surface-container-highest border-b border-outline-variant grid grid-cols-[100px_60px_60px_50px_50px_50px_75px_75px_75px_75px_75px_75px_75px_75px_160px_60px] font-bold text-primary uppercase text-[11px] py-2.5 px-3 tracking-wider shadow-sm">
+              <div className="sticky top-0 z-10 bg-surface-container-highest border-b border-outline-variant grid grid-cols-[100px_60px_60px_50px_50px_50px_75px_75px_75px_75px_75px_75px_75px_75px_200px_60px] font-bold text-primary uppercase text-[11px] py-2.5 px-3 tracking-wider shadow-sm">
                 <div>Indicativo</div>
                 <div>Tipo</div>
                 <div>Esteira</div>
@@ -329,11 +348,11 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
                 <div>Operação</div>
                 <div>Ingresso</div>
                 <div>Corrida</div>
+                <div>TOPD</div>
                 <div>FAF2</div>
                 <div>FAF1</div>
                 <div>FAF</div>
-                <div>THR</div>
-                <div>P_LIVRE</div>
+                <div>TOPP</div>
                 <div>OBS</div>
                 <div className="text-center">AÇÃO</div>
               </div>
@@ -348,7 +367,7 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
                   return (
                     <div 
                       key={f.id}
-                      className={`grid grid-cols-[100px_60px_60px_50px_50px_50px_75px_75px_75px_75px_75px_75px_75px_75px_160px_60px] items-center py-2.5 px-3 hover:bg-surface-container-high/60 transition-colors ${
+                      className={`grid grid-cols-[100px_60px_60px_50px_50px_50px_75px_75px_75px_75px_75px_75px_75px_75px_200px_60px] items-center py-2.5 px-3 hover:bg-surface-container-high/60 transition-colors ${
                         idx % 2 === 0 ? 'bg-surface/40' : 'bg-surface-container-lowest/30'
                       }`}
                     >
@@ -397,37 +416,37 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
 
                       {/* Ingresso (DEP) */}
                       <div className={d.ingresso ? 'text-primary font-semibold' : 'text-outline'}>
-                        {d.ingresso || ''}
+                        {d.ingresso ? `${d.ingresso}s` : ''}
                       </div>
 
                       {/* Corrida (DEP) */}
                       <div className={d.corrida ? 'text-primary font-bold' : 'text-outline'}>
-                        {d.corrida || ''}
+                        {d.corrida ? `${d.corrida}s` : ''}
+                      </div>
+
+                      {/* TOPD (DEP) */}
+                      <div className={d.topd ? 'text-functional-dep font-bold' : 'text-outline'}>
+                        {d.topd ? `${d.topd}s` : ''}
                       </div>
 
                       {/* FAF2 (ARR) */}
                       <div className={d.faf2 ? 'text-primary' : 'text-outline'}>
-                        {d.faf2 || ''}
+                        {d.faf2 ? `${d.faf2}s` : ''}
                       </div>
 
                       {/* FAF1 (ARR) */}
                       <div className={d.faf1 ? 'text-primary' : 'text-outline'}>
-                        {d.faf1 || ''}
+                        {d.faf1 ? `${d.faf1}s` : ''}
                       </div>
 
                       {/* FAF (ARR) */}
                       <div className={d.faf ? 'text-primary' : 'text-outline'}>
-                        {d.faf || ''}
+                        {d.faf ? `${d.faf}s` : ''}
                       </div>
 
-                      {/* THR (ARR) */}
-                      <div className={d.thr ? 'text-primary font-semibold' : 'text-outline'}>
-                        {d.thr || ''}
-                      </div>
-
-                      {/* P_LIVRE (ARR) */}
-                      <div className={d.pLivre ? 'text-primary font-bold' : 'text-outline'}>
-                        {d.pLivre || ''}
+                      {/* TOPP (ARR) */}
+                      <div className={d.topp ? 'text-functional-arr font-bold' : 'text-outline'}>
+                        {d.topp ? `${d.topp}s` : ''}
                       </div>
 
                       {/* OBS */}

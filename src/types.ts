@@ -15,7 +15,9 @@ export interface Flight {
   taxiwayOut?: string;
   taxiway?: string;
   time?: string; // used for Hold
+  inicioTime?: number;
   ingressoTime?: number;
+  autorizacaoTime?: number;
   reacaoTime?: number;
   corridaTime?: number;
   faf2Time?: number;

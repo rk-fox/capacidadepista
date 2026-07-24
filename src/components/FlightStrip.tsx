@@ -57,6 +57,16 @@ export function FlightStrip({
   const isArr = flight.type === 'ARR';
   const isHold = flight.type === 'HOLD';
   
+  const depCheckpoints = React.useMemo(() => {
+    return [
+      { key: 'inicioTime', label: 'INÍCIO' },
+      { key: 'ingressoTime', label: 'INGRESSO' },
+      { key: 'autorizacaoTime', label: 'AUTORIZ.' },
+      { key: 'reacaoTime', label: 'REAÇÃO' },
+      { key: 'corridaTime', label: 'CORRIDA' }
+    ];
+  }, []);
+
   const arrCheckpoints = React.useMemo(() => {
     const cps: { key: keyof Flight, label: string }[] = [];
     if (fafs[0]) cps.push({ key: 'faf2Time', label: `${fafs[0]}NM` });
@@ -211,38 +221,58 @@ export function FlightStrip({
             <div></div>
           </div>
         ) : isDep ? (
-          <div className="flex flex-row justify-between items-center min-h-[44px] gap-1 px-1">
-            <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
-              onClick={(e) => { e.stopPropagation(); handleUpdate({ ingressoTime: Date.now(), reacaoTime: undefined, corridaTime: undefined }); }}
-            >
-              <span className="text-[10px] text-on-surface-variant mb-0.5">INGRESSO</span>
-              <span className="text-primary font-bold text-[12px]">{flight.ingressoTime ? formatHHMMSS(flight.ingressoTime) : '--:--:--'}</span>
-            </div>
-            
-            <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
-              onClick={(e) => { e.stopPropagation(); if (flight.ingressoTime) handleUpdate({ reacaoTime: Date.now(), corridaTime: undefined }); }}
-            >
-              <span className="text-[10px] text-on-surface-variant mb-0.5">REAÇÃO</span>
-              <span className="text-primary font-bold text-[12px]">{flight.reacaoTime ? formatDiff(flight.ingressoTime, flight.reacaoTime) : '---s'}</span>
-            </div>
+          <div className="flex flex-row justify-between items-center min-h-[44px] gap-0.5 overflow-x-auto scrollbar-hide px-0.5">
+            {depCheckpoints.map((cp, idx) => {
+               let prevTime: number | undefined;
+               let isFirstFilled = true;
+               for (let i = 0; i < idx; i++) {
+                 if (flight[depCheckpoints[i].key as keyof Flight]) {
+                   prevTime = flight[depCheckpoints[i].key as keyof Flight] as number;
+                   isFirstFilled = false;
+                 }
+               }
+               
+               const myTime = flight[cp.key as keyof Flight] as number | undefined;
+               const displayValue = myTime 
+                 ? (isFirstFilled ? formatHHMMSS(myTime) : formatDiff(prevTime, myTime)) 
+                 : (isFirstFilled ? '--:--:--' : '---s');
 
-            <div 
-              className="flex flex-col cursor-pointer hover:bg-surface-container-high rounded px-1.5 py-1.5 transition-colors whitespace-nowrap text-center flex-1"
-              onClick={(e) => { e.stopPropagation(); if (flight.ingressoTime) handleUpdate({ corridaTime: Date.now() }); }}
-            >
-              <span className="text-[10px] text-on-surface-variant mb-0.5">CORRIDA</span>
-              <span className="text-primary font-bold text-[12px]">{flight.corridaTime ? formatDiff(flight.reacaoTime || flight.ingressoTime, flight.corridaTime) : '---s'}</span>
-            </div>
+               return (
+                 <div 
+                   key={cp.key}
+                   className="flex flex-col rounded px-1 py-1.5 transition-colors whitespace-nowrap text-center flex-1 cursor-pointer hover:bg-surface-container-high"
+                   onClick={(e) => {
+                     e.stopPropagation();
+                     const updates: any = { [cp.key]: Date.now() };
+                     for (let i = idx + 1; i < depCheckpoints.length; i++) {
+                       updates[depCheckpoints[i].key] = undefined;
+                     }
+                     handleUpdate(updates);
+                   }}
+                 >
+                   <span className="text-[9px] text-on-surface-variant mb-0.5">{cp.label}</span>
+                   <span className="text-primary font-bold text-[11px]">{displayValue}</span>
+                 </div>
+               );
+            })}
             
             <button 
               onClick={(e) => {
                 e.stopPropagation();
-                if (!flight.ingressoTime) handleUpdate({ ingressoTime: Date.now(), reacaoTime: undefined, corridaTime: undefined });
-                else if (!flight.reacaoTime && !flight.corridaTime) handleUpdate({ reacaoTime: Date.now(), corridaTime: undefined });
-                else if (!flight.corridaTime) handleUpdate({ corridaTime: Date.now() });
-                else if (!flight.finished) handleUpdate('finished', true);
+                let lastFilledIndex = -1;
+                for (let i = 0; i < depCheckpoints.length; i++) {
+                  if (flight[depCheckpoints[i].key as keyof Flight]) {
+                    lastFilledIndex = i;
+                  }
+                }
+
+                const nextIndex = lastFilledIndex + 1;
+                if (nextIndex < depCheckpoints.length) {
+                  const nextCp = depCheckpoints[nextIndex];
+                  handleUpdate(nextCp.key, Date.now());
+                } else if (!flight.finished) {
+                  handleUpdate('finished', true);
+                }
               }}
               className="p-2 sm:p-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-full transition-colors flex-shrink-0 shadow-sm ml-1"
               title="Stopwatch"
