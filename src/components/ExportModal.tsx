@@ -19,6 +19,18 @@ function formatHHMMSS(ms?: number) {
   return `${h}:${m}:${s}`;
 }
 
+function formatDateTime(ms?: number) {
+  if (!ms) return '';
+  const d = new Date(ms);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  const s = d.getSeconds().toString().padStart(2, '0');
+  return `${day}/${month}/${year} ${h}:${m}:${s}`;
+}
+
 function getDiffSecs(start?: number, end?: number) {
   if (!start || !end) return '';
   return Math.floor((end - start) / 1000).toString();
@@ -28,6 +40,7 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
   const [filterMode, setFilterMode] = useState<'FINISHED' | 'ALL'>('FINISHED');
   const [opFilter, setOpFilter] = useState<'ALL' | 'DEP' | 'ARR'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
+  const [exportFormat, setExportFormat] = useState<'DEFAULT' | 'DETAILED'>('DEFAULT');
   const [copied, setCopied] = useState(false);
   const [flightToDelete, setFlightToDelete] = useState<Flight | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -113,32 +126,76 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
     };
   };
 
+  const defaultHeaders = [
+    'CALLSIGN', 'REGMARK', 'EOBT', 'ELDT', 'ACTYPE', 'WAKETURB', 'ADEP', 'ADES',
+    'TIPO DE VOO', 'EVENTO', 'PISTA', 'MET', 'TOPD', 'TAXIWAY', 'TFINAL', 'TFINAL6',
+    'TFINAL7', 'TFINAL8', 'TOPP', 'SID', 'IAP', 'THRspeed', 'CIA AEREA'
+  ];
+
+  const detailedHeaders = [
+    'Indicativo', 'Tipo', 'Esteira', 'AD', 'RWY', 'Táxi', 'Operação',
+    'Ingresso', 'Corrida', 'TOPD', 'FAF2', 'FAF1', 'FAF', 'TOPP', 'OBS'
+  ];
+
+  const getDefaultFormatData = (f: Flight) => {
+    const isDep = f.type === 'DEP';
+    const isArr = f.type === 'ARR';
+    const d = getRowData(f);
+
+    return [
+      f.callsign || '',
+      f.callsign || '',
+      isDep ? formatDateTime(f.inicioTime) : '',
+      isArr ? formatDateTime(f.pLivreTime) : '',
+      f.aircraft || '',
+      f.wakeTurbulence || '',
+      isDep ? (f.airport || '') : '',
+      isArr ? (f.airport || '') : '',
+      'G',
+      f.type || '',
+      f.runway || '',
+      'VMC',
+      d.topd,
+      d.taxi,
+      d.faf,
+      d.faf1,
+      d.faf2,
+      '',
+      d.topp,
+      '',
+      '',
+      '',
+      ''
+    ];
+  };
+
   // CSV Export with UTF-8 BOM
   const handleExportCSV = () => {
-    const headers = [
-      'Indicativo', 'Tipo', 'Esteira', 'AD', 'RWY', 'Táxi', 'Operação',
-      'Ingresso', 'Corrida', 'TOPD', 'FAF2', 'FAF1', 'FAF', 'TOPP', 'OBS'
-    ];
+    const headers = exportFormat === 'DEFAULT' ? defaultHeaders : detailedHeaders;
 
     const rows = displayedFlights.map(f => {
-      const d = getRowData(f);
-      return [
-        d.indicativo,
-        d.tipo,
-        d.esteira,
-        d.ad,
-        d.rwy,
-        d.taxi,
-        d.operacao,
-        d.ingresso,
-        d.corrida,
-        d.topd,
-        d.faf2,
-        d.faf1,
-        d.faf,
-        d.topp,
-        `"${d.obs.replace(/"/g, '""')}"`
-      ];
+      if (exportFormat === 'DEFAULT') {
+        return getDefaultFormatData(f);
+      } else {
+        const d = getRowData(f);
+        return [
+          d.indicativo,
+          d.tipo,
+          d.esteira,
+          d.ad,
+          d.rwy,
+          d.taxi,
+          d.operacao,
+          d.ingresso,
+          d.corrida,
+          d.topd,
+          d.faf2,
+          d.faf1,
+          d.faf,
+          d.topp,
+          `"${d.obs.replace(/"/g, '""')}"`
+        ];
+      }
     });
 
     const csvContent = "\uFEFF" + [
@@ -158,17 +215,18 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
 
   // Copy to clipboard as TSV (pasteable directly into Excel / Google Sheets)
   const handleCopyClipboard = () => {
-    const headers = [
-      'Indicativo', 'Tipo', 'Esteira', 'AD', 'RWY', 'Táxi', 'Operação',
-      'Ingresso', 'Corrida', 'TOPD', 'FAF2', 'FAF1', 'FAF', 'TOPP', 'OBS'
-    ];
+    const headers = exportFormat === 'DEFAULT' ? defaultHeaders : detailedHeaders;
 
     const rows = displayedFlights.map(f => {
-      const d = getRowData(f);
-      return [
-        d.indicativo, d.tipo, d.esteira, d.ad, d.rwy, d.taxi, d.operacao,
-        d.ingresso, d.corrida, d.topd, d.faf2, d.faf1, d.faf, d.topp, d.obs
-      ].join("\t");
+      if (exportFormat === 'DEFAULT') {
+        return getDefaultFormatData(f).join("\t");
+      } else {
+        const d = getRowData(f);
+        return [
+          d.indicativo, d.tipo, d.esteira, d.ad, d.rwy, d.taxi, d.operacao,
+          d.ingresso, d.corrida, d.topd, d.faf2, d.faf1, d.faf, d.topp, d.obs
+        ].join("\t");
+      }
     });
 
     const textToCopy = [headers.join("\t"), ...rows].join("\n");
@@ -200,7 +258,31 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end flex-wrap">
+            {/* Export Format Toggle */}
+            <div className="flex items-center bg-surface-container p-1 rounded-xl border border-outline-variant mr-2">
+              <button
+                onClick={() => setExportFormat('DEFAULT')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-label-caps transition-all cursor-pointer ${
+                  exportFormat === 'DEFAULT'
+                    ? 'bg-primary text-on-primary shadow-sm'
+                    : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                Padrão
+              </button>
+              <button
+                onClick={() => setExportFormat('DETAILED')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold font-label-caps transition-all cursor-pointer ${
+                  exportFormat === 'DETAILED'
+                    ? 'bg-primary text-on-primary shadow-sm'
+                    : 'text-on-surface-variant hover:text-primary'
+                }`}
+              >
+                Detalhado
+              </button>
+            </div>
+
             <button 
               onClick={handleCopyClipboard}
               className={`px-3 py-2 rounded-xl text-xs font-bold font-label-caps flex items-center gap-2 transition-all cursor-pointer ${

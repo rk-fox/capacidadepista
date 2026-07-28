@@ -20,7 +20,7 @@ export function AuthScreen() {
     setLoading(true);
     setError('');
     
-    const loginEmail = email.includes('@') ? email : `${email}@cgna.gov.br`;
+    const loginEmail = email.includes('@') ? email : `${email}@cgna.decea.mil.br`;
     
     try {
       await signInWithEmailAndPassword(auth, loginEmail, password);
@@ -41,7 +41,7 @@ export function AuthScreen() {
       setError('Digite seu login/email para redefinir a senha.');
       return;
     }
-    const loginEmail = email.includes('@') ? email : `${email}@cgna.gov.br`;
+    const loginEmail = email.includes('@') ? email : `${email}@cgna.decea.mil.br`;
     try {
       await sendPasswordResetEmail(auth, loginEmail);
       setResetSent(true);
@@ -52,29 +52,6 @@ export function AuthScreen() {
     }
   };
 
-  const handleCreateInitialAccount = async () => {
-    if (!email || !password) {
-      setError('Preencha login e senha para criar a conta.');
-      return;
-    }
-    const loginEmail = email.includes('@') ? email : `${email}@cgna.gov.br`;
-    setLoading(true);
-    setError('');
-    try {
-      // Use signIn... Wait, no, we need to create it
-      const { createUserWithEmailAndPassword } = await import('firebase/auth');
-      await createUserWithEmailAndPassword(auth, loginEmail, password);
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('Conta já existe. Tente fazer login.');
-      } else {
-        setError('Erro ao criar conta: ' + err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center p-4 relative overflow-hidden">
@@ -133,21 +110,13 @@ export function AuthScreen() {
             />
           </div>
 
-          <div className="flex gap-2 mt-2">
-            <button 
-              type="button"
-              onClick={handleCreateInitialAccount}
-              disabled={loading}
-              className="w-1/3 bg-surface-container text-on-surface-variant border border-outline-variant font-label-caps font-semibold p-4 rounded-xl hover:bg-surface-container-high hover:text-primary transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-              CRIAR
-            </button>
+          <div className="mt-4">
             <button 
               type="submit"
               disabled={loading}
-              className="w-2/3 bg-primary text-on-primary font-label-caps font-semibold p-4 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
+              className="w-full bg-primary text-on-primary font-label-caps font-semibold p-4 rounded-xl shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              {loading ? 'AGUARDE...' : 'INICIAR'}
+              {loading ? 'AGUARDE...' : 'INICIAR SESSÃO'}
             </button>
           </div>
         </form>

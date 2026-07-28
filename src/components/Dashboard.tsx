@@ -943,7 +943,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                      value={fafs[idx]}
                      onChange={(e) => {
                        const newFafs = [...fafs];
-                       newFafs[idx] = e.target.value;
+                       newFafs[idx] = e.target.value.toUpperCase();
                        setFafs(newFafs);
                      }}
                      required={idx === 2} 

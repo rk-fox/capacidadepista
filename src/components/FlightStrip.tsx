@@ -20,7 +20,7 @@ function EditableField({ value, onChange, className }: { value: string, onChange
   return (
     <input 
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => onChange(e.target.value.toUpperCase())}
       onFocus={() => onChange('')}
       className={`bg-transparent outline-none m-0 p-0 uppercase ${className}`}
       style={{ width: `${Math.max(1, value.length)}ch` }}
