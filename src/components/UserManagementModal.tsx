@@ -23,7 +23,7 @@ export function UserManagementModal({ onClose }: { onClose: () => void }) {
     setTempPass('');
     
     try {
-      const loginEmail = email.includes('@') ? email : `${email}@cgna.gov.br`;
+      const loginEmail = email.includes('@') ? email : `${email}@cgna.decea.mil.br`;
       // Create user with a strong temporary password using secondary app so it doesn't log the admin out
       const tempPassword = Math.random().toString(36).slice(-10) + 'A!1';
       await createUserWithEmailAndPassword(secondaryAuth, loginEmail, tempPassword);
@@ -64,7 +64,7 @@ export function UserManagementModal({ onClose }: { onClose: () => void }) {
             CADASTRAR NOVO USUÁRIO
           </h3>
           <p className="text-xs text-on-surface-variant mt-2 text-center font-data-mono leading-relaxed px-4">
-            Insira o login (ex: ALPHA-1) ou email. Se usar apenas o login, ele será tratado como @cgna.gov.br.
+            Insira o login (ex: ALPHA-1) ou email. Se usar apenas o login, ele será tratado como @cgna.decea.mil.br.
           </p>
         </div>
 
