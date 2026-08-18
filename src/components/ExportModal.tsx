@@ -94,8 +94,8 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
     const topp = isArr ? getDiffSecs(f.thrTime, f.pLivreTime) : '';
 
     let obs = '';
+    const parts = [];
     if (isDep) {
-      const parts = [];
       if (f.autorizacaoTime) {
         const prevToAut = f.ingressoTime || f.inicioTime;
         parts.push(`Aut: ${getDiffSecs(prevToAut, f.autorizacaoTime)}s`);
@@ -104,8 +104,11 @@ export function ExportModal({ onClose, flights, onUpdateFlight, onDeleteFlight, 
         const prevToReacao = f.autorizacaoTime || f.ingressoTime || f.inicioTime;
         parts.push(`Reação: ${getDiffSecs(prevToReacao, f.reacaoTime)}s`);
       }
-      obs = parts.join(' | ');
     }
+    if (f.observacao) {
+      parts.push(f.observacao);
+    }
+    obs = parts.join(' | ');
 
     return {
       indicativo: f.callsign || '',

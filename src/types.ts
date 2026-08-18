@@ -26,6 +26,7 @@ export interface Flight {
   thrTime?: number;
   pLivreTime?: number;
   finished?: boolean;
+  observacao?: string;
 }
 
 export interface SystemStatus {

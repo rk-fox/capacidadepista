@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Settings, Download, Moon, Sun, Plus, X, LogOut, SlidersHorizontal, Layers, Edit2, Plane, FileSpreadsheet, Users, Lock as LockIcon, Maximize, Minimize } from 'lucide-react';
+import { Settings, Download, Moon, Sun, Plus, X, LogOut, SlidersHorizontal, Layers, Edit2, Plane, FileSpreadsheet, Users, Lock as LockIcon, Maximize, Minimize, Search, UploadCloud } from 'lucide-react';
 import { FlightStrip } from './FlightStrip';
 import { ExportModal } from './ExportModal';
 import { UserManagementModal } from './UserManagementModal';
 import { PasswordModal } from './PasswordModal';
+import { ObservationModal } from './ObservationModal';
+import { ImportModal } from './ImportModal';
 import { mockFlights } from '../data';
 import { Flight } from '../types';
 import { auth, db } from '../lib/firebase';
@@ -18,6 +20,7 @@ interface DashboardProps {
 export function Dashboard({ theme, toggleTheme }: DashboardProps) {
   const [time, setTime] = useState<string>('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -26,7 +29,9 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
   
   const [flights, setFlights] = useState<Flight[]>([]);
   const [showMoveModal, setShowMoveModal] = useState<string | null>(null);
+  const [showObsModal, setShowObsModal] = useState<string | null>(null);
   const [activeAsideModal, setActiveAsideModal] = useState<'AD' | 'RWY' | 'TWY' | 'FAF' | null>(null);
+  const [holdSearchQuery, setHoldSearchQuery] = useState('');
 
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -182,7 +187,12 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
 
   const deps = flights.filter(f => f.type === 'DEP' && !f.finished);
   const arrs = flights.filter(f => f.type === 'ARR' && !f.finished);
-  const news = flights.filter(f => f.type === 'HOLD' && !f.finished);
+  const news = flights.filter(f => f.type === 'HOLD' && !f.finished && 
+    (holdSearchQuery ? (
+      f.callsign.toLowerCase().includes(holdSearchQuery.toLowerCase()) ||
+      f.aircraft.toLowerCase().includes(holdSearchQuery.toLowerCase())
+    ) : true)
+  );
 
   // Effective mobile mode
   const activeMobileOp = operationMode === 'BOTH' ? mobileOpMode : operationMode;
@@ -232,6 +242,10 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
         <div className="flex items-center justify-end gap-2 sm:gap-3 w-1/3">
           {/* Desktop/Tablet Header Actions */}
           <div className="hidden md:flex items-center gap-2 sm:gap-3">
+            <button onClick={() => setShowImportModal(true)} className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors group cursor-pointer" title="Importar Tráfegos (PDF/Excel)">
+              <UploadCloud size={18} />
+              <span className="font-label-caps text-[11px] hidden lg:inline">IMPORTAR</span>
+            </button>
             <button onClick={() => setShowExportModal(true)} className="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors group cursor-pointer" title="Planilha de Coleta e Dados">
               <FileSpreadsheet size={18} />
               <span className="font-label-caps text-[11px] hidden lg:inline">PLANILHA</span>
@@ -339,7 +353,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                     key={f.id} 
                     flight={f} 
                     onUpdate={handleUpdateStrip} 
-                    availableRunways={rwys} 
+                    onObsRequest={setShowObsModal} availableRunways={rwys} 
                     availableTaxiways={twys}
                     activeTwyIn={activeTwyDep}
                     activeTwyOut={activeTwyArr}
@@ -368,7 +382,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                     key={f.id} 
                     flight={f} 
                     onUpdate={handleUpdateStrip} 
-                    availableRunways={rwys} 
+                    onObsRequest={setShowObsModal} availableRunways={rwys} 
                     availableTaxiways={twys}
                     activeTwyIn={activeTwyDep}
                     activeTwyOut={activeTwyArr}
@@ -392,13 +406,29 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
               if (id) handleDragDrop(id, 'HOLD');
             }}
           >
-            <div className="h-12 bg-surface-container-highest px-4 flex items-center justify-center border-b border-outline-variant shrink-0">
+            <div className="h-12 bg-surface-container-highest px-3 flex items-center justify-between border-b border-outline-variant shrink-0 gap-2">
+               <div className="relative flex-1">
+                 <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-60" />
+                 <input 
+                   type="text"
+                   placeholder="Buscar tráfego..."
+                   value={holdSearchQuery}
+                   onChange={(e) => setHoldSearchQuery(e.target.value)}
+                   className="w-full bg-surface-container border border-outline-variant rounded pl-7 pr-2 py-1.5 text-xs font-data-mono outline-none focus:border-primary transition-colors text-on-surface uppercase"
+                 />
+                 {holdSearchQuery && (
+                   <button onClick={() => setHoldSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary">
+                     <X size={12} />
+                   </button>
+                 )}
+               </div>
                <button 
                  onClick={handleAddStrip} 
-                 className="w-full max-w-[220px] bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-4 rounded shadow-[0_2px_10px_rgba(37,99,235,0.3)] flex items-center justify-center gap-2 transition-all active:scale-95"
+                 className="shrink-0 bg-blue-600 hover:bg-blue-500 text-white font-bold py-1.5 px-3 rounded shadow-[0_2px_10px_rgba(37,99,235,0.3)] flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                 title="Nova Strip"
                >
                  <Plus size={16} strokeWidth={3} /> 
-                 <span className="font-label-caps text-[12px] uppercase tracking-wider">Nova Strip</span>
+                 <span className="font-label-caps text-[11px] uppercase tracking-wider hidden xl:inline">Nova Strip</span>
                </button>
             </div>
             
@@ -410,7 +440,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                   onUpdate={handleUpdateStrip} 
                   onMoveRequest={setShowMoveModal} 
                   onDelete={handleDeleteStrip} 
-                  availableRunways={rwys} 
+                  onObsRequest={setShowObsModal} availableRunways={rwys} 
                   availableTaxiways={twys}
                   activeTwyIn={activeTwyDep}
                   activeTwyOut={activeTwyArr}
@@ -482,11 +512,25 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
           
           {/* UPPER PART: HOLD STRIPS (Coluna 3) */}
           <section className="h-1/2 flex flex-col bg-surface-container border-b-2 border-outline-variant overflow-hidden">
-            <div className="h-11 bg-surface-container-highest px-3 flex items-center justify-between border-b border-outline-variant shrink-0">
-               <span className="font-label-caps text-[11px] font-bold text-primary">STRIPS (HOLD)</span>
+            <div className="h-11 bg-surface-container-highest px-2 flex items-center justify-between border-b border-outline-variant shrink-0 gap-2">
+               <div className="relative flex-1">
+                 <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-60" />
+                 <input 
+                   type="text"
+                   placeholder="Buscar tráfego..."
+                   value={holdSearchQuery}
+                   onChange={(e) => setHoldSearchQuery(e.target.value)}
+                   className="w-full bg-surface-container border border-outline-variant rounded pl-7 pr-2 py-1 text-xs font-data-mono outline-none focus:border-primary transition-colors text-on-surface uppercase"
+                 />
+                 {holdSearchQuery && (
+                   <button onClick={() => setHoldSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary">
+                     <X size={12} />
+                   </button>
+                 )}
+               </div>
                <button 
                  onClick={handleAddStrip} 
-                 className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-[11px] font-label-caps flex items-center gap-1 shadow"
+                 className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-1 px-3 rounded text-[11px] font-label-caps flex items-center gap-1 shadow shrink-0"
                >
                  <Plus size={14} strokeWidth={3} />
                  <span>STRIP</span>
@@ -506,7 +550,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                     onUpdate={handleUpdateStrip} 
                     onMoveRequest={setShowMoveModal} 
                     onDelete={handleDeleteStrip} 
-                    availableRunways={rwys} 
+                    onObsRequest={setShowObsModal} availableRunways={rwys} 
                     availableTaxiways={twys}
                     activeTwyIn={activeTwyDep}
                     activeTwyOut={activeTwyArr}
@@ -569,6 +613,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                       key={f.id} 
                       flight={f} 
                       onUpdate={handleUpdateStrip} 
+                      onObsRequest={setShowObsModal}
                       availableRunways={rwys} 
                       availableTaxiways={twys}
                       activeTwyIn={activeTwyDep}
@@ -589,6 +634,7 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                       key={f.id} 
                       flight={f} 
                       onUpdate={handleUpdateStrip} 
+                      onObsRequest={setShowObsModal}
                       availableRunways={rwys} 
                       availableTaxiways={twys}
                       activeTwyIn={activeTwyDep}
@@ -743,6 +789,16 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
                     <div className="flex items-center gap-2">
                       <FileSpreadsheet size={18} className="text-primary" />
                       <span className="font-label-caps text-xs font-bold">PLANILHA DE COLETA (LOGS)</span>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => { setShowImportModal(true); setShowSettingsModal(false); }}
+                    className="w-full p-3 bg-surface-container hover:bg-surface-container-high border border-outline-variant rounded-xl transition-colors flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <UploadCloud size={18} className="text-primary" />
+                      <span className="font-label-caps text-xs font-bold">IMPORTAR TRÁFEGOS</span>
                     </div>
                   </button>
 
@@ -962,6 +1018,29 @@ export function Dashboard({ theme, toggleTheme }: DashboardProps) {
       )}
       {showPasswordModal && (
         <PasswordModal onClose={() => setShowPasswordModal(false)} />
+      )}
+      {showObsModal && (
+        <ObservationModal
+          flight={flights.find(f => f.id === showObsModal)!}
+          onClose={() => setShowObsModal(null)}
+          onSave={(id, obs) => {
+            handleUpdateStrip(id, 'observacao', obs);
+            setShowObsModal(null);
+          }}
+        />
+      )}
+      {showImportModal && (
+        <ImportModal
+          onClose={() => setShowImportModal(false)}
+          onImport={async (importedFlights) => {
+             const batch = writeBatch(db);
+             importedFlights.forEach(f => {
+               batch.set(doc(db, 'flights', f.id!), f);
+             });
+             await batch.commit().catch(console.error);
+             setShowImportModal(false);
+          }}
+        />
       )}
     </div>
   );

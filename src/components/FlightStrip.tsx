@@ -1,12 +1,13 @@
 import React from 'react';
 import { Flight } from '../types';
-import { ArrowLeft, X, Clock } from 'lucide-react';
+import { ArrowLeft, X, Clock, MessageSquare } from 'lucide-react';
 
 interface FlightStripProps {
   flight: Flight;
   onUpdate?: (id: string, field: string | Partial<Flight>, value?: any) => void;
   onMoveRequest?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onObsRequest?: (id: string) => void;
   availableRunways?: string[];
   availableTaxiways?: string[];
   activeTwyIn?: string;
@@ -45,6 +46,7 @@ export function FlightStrip({
   onUpdate, 
   onMoveRequest, 
   onDelete, 
+  onObsRequest, 
   availableRunways, 
   availableTaxiways = ['A', 'B', 'C', 'D'],
   activeTwyIn,
@@ -163,6 +165,23 @@ export function FlightStrip({
           />
         </div>
         
+        {/* Center: Observation button */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onObsRequest) {
+                onObsRequest(flight.id);
+              }
+            }}
+            className={`hover:bg-black/20 rounded px-1.5 py-1 transition-colors cursor-pointer flex items-center justify-center ${flight.observacao ? 'text-amber-300' : 'opacity-60 hover:opacity-100'}`}
+            title={flight.observacao ? `Obs: ${flight.observacao}` : 'Adicionar Observação'}
+          >
+            <MessageSquare size={14} />
+          </button>
+        </div>
+
         <div className="flex items-center gap-1 font-bold text-[12px] shrink-0">
           <button 
             type="button"
